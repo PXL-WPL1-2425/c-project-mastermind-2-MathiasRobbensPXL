@@ -68,6 +68,14 @@ namespace Mastermind
         private void StopCountdown()
         {
             countdownTimer.Stop();
+
+            // Controleer of het aantal pogingen al 10 is
+            if (attempts >= 10)
+            {
+                MessageBox.Show("Je hebt het maximale aantal pogingen bereikt! Het spel is voorbij.");
+                return;  
+            }
+
             // Verhoog het aantal pogingen (beurten)
             attempts++;
             Title = $"Mastermind - Poging {attempts}";
