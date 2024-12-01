@@ -31,6 +31,8 @@ namespace Mastermind
         //aanmaken van variabele van attempts
         private int attempts = 1;
 
+        private List<string> feedbackList = new List<string>();
+
         // Variabele voor de kleurcode die we willen tonen in de titel
         private string colorCodeString = "";
         public MainWindow()
@@ -186,6 +188,48 @@ namespace Mastermind
                 label4.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(comboBox4.SelectedItem.ToString()));
 
         }
+        private void UpdateFeedbackDisplay()
+        {
+            // Clear the ListBox before adding new items
+            attemptsListBox.Items.Clear();
+
+            // Voeg elke poging en feedback toe aan de ListBox
+            foreach (var feedback in feedbackList)
+            {
+                // Maak een StackPanel voor elke poging
+                StackPanel attemptPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(0, 5, 0, 5)
+                };
+
+                // Voeg de vier kleuren toe als Borders met achtergrondkleur
+                for (int i = 0; i < 4; i++)
+                {
+                    Border colorBorder = new Border
+                    {
+                        Width = 30,
+                        Height = 30,
+                        Margin = new Thickness(5),
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(chosenColors[i]))
+                    };
+                    attemptPanel.Children.Add(colorBorder);
+                }
+
+                // Voeg de feedback (rood/wit) toe aan de StackPanel
+                TextBlock feedbackTextBlock = new TextBlock
+                {
+                    Text = feedback,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0),
+                    FontSize = 16
+                };
+                attemptPanel.Children.Add(feedbackTextBlock);
+
+                // Voeg de StackPanel toe aan de ListBox
+                attemptsListBox.Items.Add(attemptPanel);
+            }
+        }
 
         private void validateButton_Click(object sender, RoutedEventArgs e)
         {
@@ -195,7 +239,7 @@ namespace Mastermind
             string selectedColor3 = comboBox3.SelectedItem?.ToString();
             string selectedColor4 = comboBox4.SelectedItem?.ToString();
 
-            // check die controleert of elke combobox iets heeft ingevuld
+            // Controleer of alle comboboxen geselecteerd zijn
             if (selectedColor1 == null || selectedColor2 == null || selectedColor3 == null || selectedColor4 == null)
             {
                 MessageBox.Show("Kies alstublieft een kleur voor elke combobox.");
@@ -208,22 +252,84 @@ namespace Mastermind
             label3.BorderBrush = null;
             label4.BorderBrush = null;
 
-            // Controleer voor elke kleur of deze juist is (kleur en positie)
-            if (selectedColor1 == chosenColors[0]) label1.BorderBrush = new SolidColorBrush(Colors.DarkRed); // Correcte kleur op de juiste plaats
-            else if (chosenColors.Contains(selectedColor1)) label1.BorderBrush = new SolidColorBrush(Colors.Wheat); // Kleur aanwezig, maar op de verkeerde plaats
+            // We maken een tijdelijke lijst van de gekozen kleuren (voor feedback)
+            List<string> selectedColors = new List<string> { selectedColor1, selectedColor2, selectedColor3, selectedColor4 };
+            List<Border> colorBorders = new List<Border>();  // List om de borders van de ingevoerde kleuren op te slaan
 
-            if (selectedColor2 == chosenColors[1]) label2.BorderBrush = new SolidColorBrush(Colors.DarkRed); 
-            else if (chosenColors.Contains(selectedColor2)) label2.BorderBrush = new SolidColorBrush(Colors.Wheat);
+            // Feedback variabelen
+            int redCount = 0;
+            int whiteCount = 0;
+            List<string> tempChosenColors = new List<string>(chosenColors); // Kopie van de geheime code
 
-            if (selectedColor3 == chosenColors[2]) label3.BorderBrush = new SolidColorBrush(Colors.DarkRed); 
-            else if (chosenColors.Contains(selectedColor3)) label3.BorderBrush = new SolidColorBrush(Colors.Wheat); 
+            // We gaan voor elke geselecteerde kleur controleren of deze correct is (rood/wit)
+            for (int i = 0; i < 4; i++)
+            {
+                // Maak een Border voor elke geselecteerde kleur
+                Border colorBorder = new Border
+                {
+                    Width = 30,
+                    Height = 30,
+                    Margin = new Thickness(5),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(selectedColors[i])),
+                    BorderThickness = new Thickness(2)  // Zorg ervoor dat de rand zichtbaar is
+                };
+                colorBorders.Add(colorBorder);
 
-            if (selectedColor4 == chosenColors[3]) label4.BorderBrush = new SolidColorBrush(Colors.DarkRed); 
-            else if (chosenColors.Contains(selectedColor4)) label4.BorderBrush = new SolidColorBrush(Colors.Wheat); 
+                // Feedback bepalen
+                if (selectedColors[i] == chosenColors[i]) // Kleur en positie zijn correct
+                {
+                    colorBorder.BorderBrush = new SolidColorBrush(Colors.DarkRed);  // Rood voor correct
+                    redCount++;
+                    tempChosenColors[i] = ""; // Verwijder de correct geraden kleur uit de lijst
+                }
+                else if (chosenColors.Contains(selectedColors[i])) // Kleur is aanwezig, maar op de verkeerde plaats
+                {
+                    colorBorder.BorderBrush = new SolidColorBrush(Colors.Wheat); // Wit voor incorrecte positie
+                    whiteCount++;
+                    tempChosenColors[tempChosenColors.IndexOf(selectedColors[i])] = ""; // Verwijder de kleur uit de lijst van beschikbare kleuren
+                }
+                else
+                {
+                    // Kleur die helemaal niet voorkomt krijgt geen border (optioneel)
+                    colorBorder.BorderBrush = new SolidColorBrush(Colors.Transparent);
+                }
+            }
 
-           
+            // Voeg de kleuren en de feedback toe aan de lijst
+            string feedback = $"{redCount} rood, {whiteCount} wit";
 
+            // Voeg een StackPanel toe voor deze poging met de vier gekozen kleuren en de feedback
+            StackPanel attemptPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+
+            // Voeg de kleuren (Borders) toe aan het StackPanel
+            foreach (var border in colorBorders)
+            {
+                attemptPanel.Children.Add(border);
+            }
+
+            // Voeg de feedback als tekst toe
+            TextBlock feedbackTextBlock = new TextBlock
+            {
+                Text = feedback,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 0, 0, 0),
+                FontSize = 16
+            };
+            attemptPanel.Children.Add(feedbackTextBlock);
+
+            // Voeg de poging toe aan de ListBox
+            attemptsListBox.Items.Add(attemptPanel);
+
+            // Stop de countdown en verhoog de poging
             StopCountdown();
         }
+
+
+
     }
+
 }
