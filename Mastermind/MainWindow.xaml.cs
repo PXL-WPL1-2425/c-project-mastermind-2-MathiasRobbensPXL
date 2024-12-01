@@ -1,4 +1,5 @@
-﻿using System.Reflection.Emit;
+﻿using System;
+using System.Reflection.Emit;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,6 +36,8 @@ namespace Mastermind
         private int attempts = 1;
 
         private List<string> feedbackList = new List<string>();
+
+        private Random random = new Random();
 
         // Variabele voor de kleurcode die we willen tonen in de titel
         private string colorCodeString = "";
@@ -234,6 +237,10 @@ namespace Mastermind
             }
         }
 
+        private int attemptCount = 0; // Aantal pogingen
+        private const int maxAttempts = 10; // Maximale aantal pogingen
+        private bool gameWon = false; // Of de speler de code heeft gekraakt
+
         private void validateButton_Click(object sender, RoutedEventArgs e)
         {
             // Verkrijg de geselecteerde kleuren van de comboboxen
@@ -289,8 +296,15 @@ namespace Mastermind
                 {
                     colorBorder.BorderBrush = new SolidColorBrush(Colors.Wheat); // Wit voor incorrecte positie
                     whiteCount++;
-                    tempChosenColors[tempChosenColors.IndexOf(selectedColors[i])] = ""; // Verwijder de kleur uit de lijst van beschikbare kleuren
+
+                   
+                    int tempIndex = tempChosenColors.IndexOf(selectedColors[i]);
+                    if (tempIndex != -1) // Zorg ervoor dat de kleur gevonden wordt in tempChosenColors
+                    {
+                        tempChosenColors[tempIndex] = ""; // Verwijder de kleur uit de lijst
+                    }
                 }
+
                 else
                 {
                     // Kleur die helemaal niet voorkomt krijgt geen border (optioneel)
@@ -330,17 +344,85 @@ namespace Mastermind
             // Stop de countdown en verhoog de poging
             StopCountdown();
 
+            // **Score berekening**
             int score = 100;
+            int incorrectColors = 4 - redCount - whiteCount;
+            score -= (whiteCount * 1) + (incorrectColors * 2);
+            scoreLabel.Content = $"Score: {score} strafpunt(en)";
+
+            // **Check of het spel afgelopen is**
+            attemptCount++; // Verhoog de poging teller
+
+            // Check of de speler de code heeft gekraakt (4 rood)
+            if (redCount == 4)
+            {
+                gameWon = true;
+                MessageBox.Show($"Gefeliciteerd! Je hebt de code gekraakt in {attemptCount} pogingen!");
+                EndGame();
+                return;
+            }
+
+            // Als we het aantal pogingen hebben bereikt
+            if (attemptCount >= maxAttempts)
+            {
+                // De speler heeft het maximum aantal pogingen bereikt, toon de geheime code
+                MessageBox.Show($"Je hebt het maximale aantal pogingen bereikt. De geheime code was: {string.Join(", ", chosenColors)}");
+                EndGame();
+            }
+        }
+        private void GenerateNewCode()
+        {
+            
+            chosenColors.Clear();  
+
+            for (int i = 0; i < 4; i++)
+            {
+                int index = random.Next(colors.Count);  
+                chosenColors.Add(colors[index]);       
+            }
 
            
-            int incorrectColors = 4 - redCount - whiteCount;
-
-            // Aftrekken van strafpunten van de score
-            score -= (whiteCount * 1) + (incorrectColors * 2);
-
-            // Toon de score in het label
-            scoreLabel.Content = $"Score: {score}";
         }
+
+
+
+        // Eindig het spel en vraag of de speler opnieuw wil spelen
+        private void EndGame()
+        {
+            // Vraag de speler of hij opnieuw wil spelen
+            var result = MessageBox.Show("Wil je opnieuw spelen?", "Spel beëindigen", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                // Nieuwe code genereren en het spel resetten
+                GenerateNewCode();  
+                ResetGame();        
+            }
+            else
+            {
+                
+                Close();
+            }
+        }
+
+       
+        private void ResetGame()
+        {
+            attemptCount = 0;
+            attempts = 1;
+            gameWon = false;
+            scoreLabel.Content = "Score: 100";  
+            attemptsListBox.Items.Clear();     
+                                             
+            comboBox1.SelectedItem = null;
+            comboBox2.SelectedItem = null;
+            comboBox3.SelectedItem = null;
+            comboBox4.SelectedItem = null;
+
+            Title = $"Mastermind - Poging {attempts}";
+        }
+
+
+
 
 
 
