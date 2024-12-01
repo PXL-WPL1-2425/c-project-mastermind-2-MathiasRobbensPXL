@@ -23,6 +23,9 @@ namespace Mastermind
         private DispatcherTimer countdownTimer;
         private int countdownTime = 0;
 
+        private int score = 100; // Startscore
+
+
 
         //lijst aanmaken voor de verschillende kleuren
         List<string> colors = new List<string> { "Red", "Yellow", "Orange", "White", "Green", "Blue" };
@@ -326,7 +329,22 @@ namespace Mastermind
 
             // Stop de countdown en verhoog de poging
             StopCountdown();
+
+            int score = 100;
+
+           
+            int incorrectColors = 4 - redCount - whiteCount;
+
+            // Aftrekken van strafpunten van de score
+            score -= (whiteCount * 1) + (incorrectColors * 2);
+
+            // Toon de score in het label
+            scoreLabel.Content = $"Score: {score}";
         }
+
+
+
+
 
 
 

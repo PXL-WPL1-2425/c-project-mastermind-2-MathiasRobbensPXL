@@ -19,6 +19,7 @@
         <TextBox Name="debugTextBox" HorizontalAlignment="Center" Margin="0,25,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="348" Visibility="Collapsed" IsReadOnly="True"/>
         <Label Name="timerLabel" Content="" HorizontalAlignment="Left" Margin="58,19,0,0" VerticalAlignment="Top" Width="116"/>
         <ListBox Name="attemptsListBox" Margin="0,303,0,0"/>
+        <Label Name="scoreLabel" Content="Score: 100" HorizontalAlignment="Left" Margin="613,269,0,0" VerticalAlignment="Top" Width="142"/>
 
     </Grid>
 </Window>
